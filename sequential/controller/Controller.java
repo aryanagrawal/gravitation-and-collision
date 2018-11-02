@@ -98,7 +98,6 @@ public class Controller extends JFrame {
 				view.updateFramePosition(-FRAME_WIDTH, 0);
 			else if(keyPressed == 'd')
 				view.updateFramePosition(FRAME_WIDTH, 0);
-			
 		}
 		
 	}

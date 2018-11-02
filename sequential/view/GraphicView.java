@@ -44,7 +44,9 @@ public class GraphicView extends JPanel implements Observer {
 	}
 	
 	public void updateFramePosition(int x, int y){
-		System.out.println(x + " " + y);
+		if((frameXIndex == 0 && x < 0) || (frameXIndex == universe.WIDTH-FRAME_WIDTH && x > 0) ||
+				(frameYIndex == 0 && y < 0) || (frameYIndex == universe.HEIGHT-FRAME_HEIGHT && y > 0))
+			return;
 		this.frameXIndex += x;
 		this.frameYIndex += y;
 	}
@@ -81,7 +83,6 @@ public class GraphicView extends JPanel implements Observer {
 		g2 = (Graphics2D) g;
 
 		for(int i=0; i< universe.getCount(); i++){
-			
 			if(withinBounds(i))
 				drawCenteredCircle((int)universe.getXPosition(i), (int)universe.getYPosition(i), 
 									(int)universe.getRadius(i));

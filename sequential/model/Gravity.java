@@ -6,7 +6,7 @@ public class Gravity {
 	public CelestialBody[] bodies;
 	public int count;
 	Random generator;
-	public static int WIDTH, HEIGHT;
+	public int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
 	public static final double DELTA_T = 1e-6;
 	
