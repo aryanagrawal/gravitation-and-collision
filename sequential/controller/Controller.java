@@ -1,5 +1,7 @@
 package controller;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -15,20 +17,47 @@ public class Controller extends JFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public static final int WIDTH = 720;
-	public static final int HEIGHT = 480;
+	
+	
+	
+	
+	/*
+	 * So the object fly up on the universal width by height,
+	 * but we only show the frame.
+	 * the magnification is calculated as (FRAME_WIDTH/UNIVERSAL_WIDTH)*100
+	 * 
+	 * 
+	 */
+	
+	public static final int FRAME_WIDTH = 720;
+	public static final int FRAME_HEIGHT = 480;
+	
+	public static final int UNIVERSE_WIDTH = 720*2;//98304;
+	public static final int UNIVERSE_HEIGHT = 480*2;//65536;
+	
+	public static final int CELESTIAL_OBJECT_COUNT = 10;
+	
 	private Gravity universe;
-	private MyListener actionList;
+	private MyMouseListener myMouse;
+	private MyKeyboardListener myKeyboard;
 	private GraphicView view;
 
 	public Controller() {
-		setSize(WIDTH, HEIGHT);
-		universe = new Gravity(10, WIDTH, HEIGHT);
-		view = new GraphicView(universe);
-		actionList = new MyListener();
-		view.addMouseListener(actionList);
-		setLocation(50, 30);
-		setTitle("Particles");
+		setSize(FRAME_WIDTH, FRAME_HEIGHT);
+		universe = new Gravity(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
+		view = new GraphicView(universe, FRAME_WIDTH, FRAME_HEIGHT);
+		
+		myMouse = new MyMouseListener();
+		myKeyboard = new MyKeyboardListener();
+		
+		view.addMouseListener(myMouse);
+		view.addKeyListener(myKeyboard);
+		
+//		this.addComponentListener(l);
+		this.addKeyListener(myKeyboard);
+		
+		setLocation(50, 50);
+		setTitle(CELESTIAL_OBJECT_COUNT + " - Objects Collision");
 		add(view);
 	}
 
@@ -41,7 +70,40 @@ public class Controller extends JFrame {
 		}
 	}
 
-	private class MyListener implements MouseListener, MouseMotionListener {
+	private class MyKeyboardListener implements KeyListener{
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+			char keyPressed = e.getKeyChar();
+			System.out.println("Key pressed: " + keyPressed);
+			if(keyPressed == 'w')
+				view.updateFramePosition(0, -FRAME_HEIGHT);
+			else if(keyPressed == 's')
+				view.updateFramePosition(0, FRAME_HEIGHT);
+			
+			else if(keyPressed == 'a')
+				view.updateFramePosition(-FRAME_WIDTH, 0);
+			else if(keyPressed == 'd')
+				view.updateFramePosition(FRAME_WIDTH, 0);
+			
+		}
+		
+	}
+	
+	private class MyMouseListener implements MouseListener, MouseMotionListener {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
