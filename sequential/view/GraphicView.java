@@ -101,6 +101,7 @@ public class GraphicView extends JPanel implements Observer {
 	@Override
 	public void paintComponent(Graphics g) {
 		g2 = (Graphics2D) g;
+		g2.fillRect(FRAME_WIDTH, 0, 5, FRAME_HEIGHT);
 		for(int i=0; i< universe.getCount(); i++){
 			if(withinBounds(i))
 				drawCenteredCircle((int)universe.getXPosition(i), (int)universe.getYPosition(i), 
