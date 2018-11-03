@@ -8,7 +8,7 @@ import java.util.Observer;
 
 import javax.swing.JPanel;
 
-import model.Gravity;
+import sequentialmodel.Gravity;
 
 public class GraphicView extends JPanel implements Observer {
 
@@ -66,6 +66,10 @@ public class GraphicView extends JPanel implements Observer {
 		frameYIndex = 0;
 	}
 
+	public void changeSpeed(double factor){
+		universe.updateSpeed(factor);
+	}
+	
 	/*
 	 * draw a circle of given radius and center on the frame
 	 * 

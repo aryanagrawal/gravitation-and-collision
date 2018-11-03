@@ -1,4 +1,4 @@
-package model;
+package sequentialmodel;
 import java.util.Random;
 
 public class Gravity {
@@ -8,7 +8,7 @@ public class Gravity {
 	Random generator;
 	public int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
-	public static final double DELTA_T = 1e-6;
+	public double DELTA_T = 1e-6;
 	
 	public Gravity(int count, int width, int height){
 		WIDTH = width;
@@ -24,7 +24,7 @@ public class Gravity {
 				
 				double x = generator.nextInt(WIDTH);
 				double y = generator.nextInt(HEIGHT);
-				double radius = generator.nextInt(10)+10;
+				double radius = generator.nextInt(1000)+100;
 				
 				if(isValid(i, x, y, radius)){
 					bodies[i] = new CelestialBody(x, y, 			// (x, y)
@@ -213,6 +213,10 @@ public class Gravity {
 		checkCollision();
 		updateForces();
 		updatePosition();
+	}
+	
+	public void updateSpeed(double factor){
+		this.DELTA_T *= factor;
 	}
 	
 	public String toString(){

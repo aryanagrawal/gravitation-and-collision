@@ -1,4 +1,4 @@
-package model;
+package sequentialmodel;
 
 public class CelestialBody {
 	private double xPosition, yPosition;
