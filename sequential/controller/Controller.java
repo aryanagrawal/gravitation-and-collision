@@ -18,24 +18,21 @@ public class Controller extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	
-	
-	
 	/*
 	 * So the object fly up on the universal width by height,
 	 * but we only show the frame.
 	 * the magnification is calculated as (FRAME_WIDTH/UNIVERSAL_WIDTH)*100
-	 * 
-	 * 
 	 */
 	
 	public static final int FRAME_WIDTH = 720;
 	public static final int FRAME_HEIGHT = 480;
 	
-	public static final int UNIVERSE_WIDTH = 720*2;//98304;
-	public static final int UNIVERSE_HEIGHT = 480*2;//65536;
+	public static final int UNIVERSE_WIDTH = 720*2;
+	public static final int UNIVERSE_HEIGHT = 480*2;
 	
-	public static final int CELESTIAL_OBJECT_COUNT = 10;
+	public static double magnification = 1;
+	
+	public static final int CELESTIAL_OBJECT_COUNT = 64;
 	
 	private Gravity universe;
 	private MyMouseListener myMouse;
@@ -45,7 +42,7 @@ public class Controller extends JFrame {
 	public Controller() {
 		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		universe = new Gravity(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
-		view = new GraphicView(universe, FRAME_WIDTH, FRAME_HEIGHT);
+		view = new GraphicView(universe, FRAME_WIDTH, FRAME_HEIGHT, magnification);
 		
 		myMouse = new MyMouseListener();
 		myKeyboard = new MyKeyboardListener();
@@ -53,7 +50,6 @@ public class Controller extends JFrame {
 		view.addMouseListener(myMouse);
 		view.addKeyListener(myKeyboard);
 		
-//		this.addComponentListener(l);
 		this.addKeyListener(myKeyboard);
 		
 		setLocation(50, 50);
@@ -88,16 +84,22 @@ public class Controller extends JFrame {
 		public void keyReleased(KeyEvent e) {
 			// TODO Auto-generated method stub
 			char keyPressed = e.getKeyChar();
-			System.out.println("Key pressed: " + keyPressed);
 			if(keyPressed == 'w')
-				view.updateFramePosition(0, -FRAME_HEIGHT);
+				view.updateFramePosition(0, (int) (-FRAME_HEIGHT));
 			else if(keyPressed == 's')
-				view.updateFramePosition(0, FRAME_HEIGHT);
-			
+				view.updateFramePosition(0, (int) (FRAME_HEIGHT));
 			else if(keyPressed == 'a')
-				view.updateFramePosition(-FRAME_WIDTH, 0);
+				view.updateFramePosition((int) (-FRAME_WIDTH), 0);
 			else if(keyPressed == 'd')
-				view.updateFramePosition(FRAME_WIDTH, 0);
+				view.updateFramePosition((int) (FRAME_WIDTH), 0);
+			else if(keyPressed == 'i'){
+				magnification *= 2;
+				view.changeMagnification(magnification);
+			}
+			else if(keyPressed == 'k'){
+				magnification /= 2;
+				view.changeMagnification(magnification);
+			}
 		}
 		
 	}

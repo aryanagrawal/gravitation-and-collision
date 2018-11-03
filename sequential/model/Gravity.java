@@ -10,23 +10,6 @@ public class Gravity {
 	public static final double G = 6.67e-11;
 	public static final double DELTA_T = 1e-6;
 	
-//	public Gravity(int width, int height){
-//		WIDTH = width;
-//		HEIGHT = height;
-//		this.count = 2;
-//		this.bodies = new CelestialBody[count];
-//									// x1, y1, M, R, Vx, Vy
-////		bodies[0] = new CelestialBody(WIDTH/2, HEIGHT/2, 1.989*(10e+30), 432169, 0, 0);
-////		bodies[1] = new CelestialBody(92.96*(10e+6), HEIGHT/2, 5.972*(10e+24), 3959, 30, 0);
-//		
-////		bodies[2] = new CelestialBody(190, 230, 5e+17, 10, 0, -5e+2);
-//		
-////		bodies[3] = new CelestialBody(90.0, 62.0, 5e+17, 10, 0, 0);
-////		bodies[4] = new CelestialBody(40.0, 60.0, 5e+17, 10, 0, 0);
-////		bodies[5] = new CelestialBody(70.0, 60.0, 5e+17, 10,0, 00);
-//		
-//	}
-	
 	public Gravity(int count, int width, int height){
 		WIDTH = width;
 		HEIGHT = height;
@@ -47,9 +30,9 @@ public class Gravity {
 					bodies[i] = new CelestialBody(x, y, 			// (x, y)
 							((generator.nextInt(90)+10)*1e+17), 	// mass
 							radius, 								// radius
-							0, 0);
-							//generator.nextInt(40) -20, 				// xVelocity
-							//generator.nextInt(40) -20);				// yVelocity
+							//0, 0);
+							generator.nextInt(40) -20, 				// xVelocity
+							generator.nextInt(40) -20);				// yVelocity
 					break label;
 				}
 			}
@@ -218,7 +201,6 @@ public class Gravity {
 			double x = velocityX*time+0.5*bodies[i].getXForce()*time*time/bodies[i].getMass();
 			double y = velocityY*time+0.5*bodies[i].getYForce()*time*time/bodies[i].getMass();
 			bodies[i].setPosition(bodies[i].getXPosition()+x, bodies[i].getYPosition()+y);
-			
 			// v = u + at
 			x = velocityX + bodies[i].getXForce()*time/bodies[i].getMass();
 			y = velocityY + bodies[i].getYForce()*time/bodies[i].getMass();
