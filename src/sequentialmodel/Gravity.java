@@ -1,4 +1,5 @@
 package sequentialmodel;
+
 import java.util.Random;
 
 public class Gravity {
