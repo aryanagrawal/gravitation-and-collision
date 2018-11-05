@@ -27,12 +27,12 @@ public class ControllerMT extends JFrame{
 	public static final int FRAME_WIDTH = 720;
 	public static final int FRAME_HEIGHT = 480;
 	
-	public static final int UNIVERSE_WIDTH = 720*2;
-	public static final int UNIVERSE_HEIGHT = 480*2;
+	public static final int UNIVERSE_WIDTH = 720;
+	public static final int UNIVERSE_HEIGHT = 480;
 	
 	public static double magnification = 1;
 	
-	public static final int CELESTIAL_OBJECT_COUNT = 20;
+	public static final int CELESTIAL_OBJECT_COUNT = 2;
 	
 	private GravityMT universe;
 	private MyKeyboardListener myKeyboard;
