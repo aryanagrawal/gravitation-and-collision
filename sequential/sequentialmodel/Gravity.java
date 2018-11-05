@@ -25,7 +25,7 @@ public class Gravity {
 				
 				double x = generator.nextInt(WIDTH);
 				double y = generator.nextInt(HEIGHT);
-				double radius = generator.nextInt(1000)+100;
+				double radius = generator.nextInt(10)+10;
 				
 				if(isValid(i, x, y, radius)){
 					bodies[i] = new CelestialBody(x, y, 			// (x, y)
@@ -119,7 +119,6 @@ public class Gravity {
 				if(j==i)
 					continue label;
 				else{
-					
 					if(distance(bodies[i].getXPosition(), bodies[i].getYPosition(),
 							bodies[j].getXPosition(), bodies[j].getYPosition()) <=
 							(bodies[i].getRadius() + bodies[j].getRadius())){
@@ -231,5 +230,4 @@ public class Gravity {
 		}
 		return s.toString();
 	}
-
 }

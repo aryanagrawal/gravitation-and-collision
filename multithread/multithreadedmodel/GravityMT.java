@@ -2,7 +2,7 @@ package multithreadedmodel;
 
 import java.util.Random;
 
-public class GravityThread {
+public class GravityMT {
 
 	public CelestialObject[] bodies;
 	public int count;
@@ -11,7 +11,8 @@ public class GravityThread {
 	public static final double G = 6.67e-11;
 	public double DELTA_T = 1e-6;
 	
-	public GravityThread(int count, int width, int height){
+	public GravityMT(int count, int width, int height){
+		
 		WIDTH = width;
 		HEIGHT = height;
 		this.count = count;
@@ -25,7 +26,7 @@ public class GravityThread {
 				
 				double x = generator.nextInt(WIDTH);
 				double y = generator.nextInt(HEIGHT);
-				double radius = generator.nextInt(1000)+100;
+				double radius = generator.nextInt(10)+10;
 				
 				if(isValid(i, x, y, radius)){
 					bodies[i] = new CelestialObject(x, y, 			// (x, y)

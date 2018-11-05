@@ -29,12 +29,12 @@ public class Controller extends JFrame {
 	public static final int FRAME_WIDTH = 720;
 	public static final int FRAME_HEIGHT = 480;
 	
-	public static final int UNIVERSE_WIDTH = 720*128;
-	public static final int UNIVERSE_HEIGHT = 480*128;
+	public static final int UNIVERSE_WIDTH = 720*2;
+	public static final int UNIVERSE_HEIGHT = 480*2;
 	
 	public static double magnification = 1;
 	
-	public static final int CELESTIAL_OBJECT_COUNT = 256;
+	public static final int CELESTIAL_OBJECT_COUNT = 20;
 	
 	private Gravity universe;
 	private MyKeyboardListener myKeyboard;
