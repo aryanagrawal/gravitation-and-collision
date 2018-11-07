@@ -1,394 +1,380 @@
 package multithreadedmodel;
 
 import java.util.Random;
-
+import java.util.concurrent.Semaphore;
 
 public class GravityMT {
 
+	public static CelestialBody[] bodies;
 	public static int count;
-	public static Random generator;
-	public static long WIDTH;
-	public static long HEIGHT;
+	public Random generator;
+	public static int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
-	public double DELTA_T = 1e-6;
+	public static double DELTA_T = 1e-7;
 
-	public static boolean defined[];
-	public static double mass[];
-	public static double radius[];
-	public static double positionX[], positionY[];
-	public static double velocityX[], velocityY[];
-	public static double forceX[], forceY[];
-	public static int creatorIndices[][];
-	
-	static CreateObjects objectsCreator[];
-	static int numThreads = 6;
-	
-	
-	public GravityMT(int num, long width, long height) {
+	public static int interBodyCollision;
+	public static int borderCollision;
 
+	public GravityMT(int c, int width, int height) {
 		WIDTH = width;
 		HEIGHT = height;
-		count = num;
-
-		defined = new boolean[num];
-		radius = new double[num];
-		mass = new double[num];
-		positionX = new double[num];
-		positionY = new double[num];
-		velocityX = new double[num];
-		velocityY = new double[num];
-		forceX = new double[num];
-		forceY = new double[num];
+		count = c;
+		bodies = new CelestialBody[c];
+		interBodyCollision = 0;
+		borderCollision = 0;
 		generator = new Random();
 
-		
-		creatorIndices = new int[count][2];
-		int evenDistribution = count / numThreads;
-		int extras = count % numThreads;
-		int first = 0;
-		int last = evenDistribution-1;
-		if(extras > 0){
-			last++;
-			extras--;
-		}
-		for(int i=0; i<numThreads; i++){
-			creatorIndices[i][0] = first;
-			creatorIndices[i][1] = last;
-			first = last + 1;
-			last = first + evenDistribution-1;
-			if(extras > 0){
-				last++;
-				extras--;
-			}
-		}
-		objectsCreator = new CreateObjects[numThreads];
-		// create N processes
-		for (int i = 0; i < numThreads; i++) {
-			objectsCreator[i] = new CreateObjects(i, count, numThreads);
-		}
+		long startTime = System.nanoTime();
+		for (int i = 0; i < c; i++) {
+			label: while (true) {
+				// create a random (x, y) position and a radius
+				// verify it, if valid, accept it and move on.
 
-		// tell them to create the objects
-		for (int i = 0; i < numThreads; i++)
-			objectsCreator[i].start();
-		
-		// kill them when they're done doing that
-		for(int i=0; i < numThreads; i++){
-			try {
-				objectsCreator[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-//		System.out.println(toString());
-//		for (int i = 0; i < num; i++) {
-//			label: while (true) {
-//				// create a random (x, y) position and a radius
-//				// verify it, if valid, accept it and move on.
-//
-//				double x = generator.nextInt((int)WIDTH);
-//				double y = generator.nextInt((int)HEIGHT);
-//				double r = generator.nextInt(10000) + 2500;
-//
-//				if (isValid(x, y, r)) {
-//					double xVel = generator.nextInt(40) - 20;
-//					double yVel = generator.nextInt(40) - 20;
-//					double m = (generator.nextInt(90) + 10) * 1e+17;
-//
-//					GravityMT.mass[i] = m;
-//					radius[i] = r;
-//					positionX[i] = x;
-//					positionY[i] = y;
-//					velocityX[i] = xVel;
-//					velocityY[i] = yVel;
-//					break label;
-//				}
-//			}
-//		}
-		
-	}
-	
-	static class CreateObjects extends Thread{
-		int threadId;
-		
-		public CreateObjects(int threadId, int totalCount, int totalThreads) {
-			this.threadId = threadId;
-		}
-		
-		public void run(){
-			createObjects(creatorIndices[threadId][0], creatorIndices[threadId][1]);
-		}
-		
-		private void createObjects(int left, int right){
-			for (int i = left; i <= right; i++) {
-				label: while (true) {
-					// create a random (x, y) position and a radius
-					// verify it, if valid, accept it and move on.
+				double x = generator.nextInt(WIDTH);
+				double y = generator.nextInt(HEIGHT);
+				double radius = generator.nextInt(10) + 10;
 
-					double x = generator.nextInt((int)WIDTH);
-					double y = generator.nextInt((int)HEIGHT);
-					double r = generator.nextInt(10000) + 2500;
-
-					if (isValid(x, y, r)) {
-						double xVel = generator.nextInt(40) - 20;
-						double yVel = generator.nextInt(40) - 20;
-						double m = (generator.nextInt(90) + 10) * 1e+17;
-
-						GravityMT.mass[i] = m;
-						radius[i] = r;
-						positionX[i] = x;
-						positionY[i] = y;
-						velocityX[i] = xVel;
-						velocityY[i] = yVel;
-						defined[i] = true;
-						break label;
-					}
+				if (isValid(i, x, y, radius)) {
+					bodies[i] = new CelestialBody(x, y, // (x, y)
+							((generator.nextInt(90) + 10) * 1e+17), // mass
+							radius, // radius
+							generator.nextInt(40) - 20, // xVelocity
+							generator.nextInt(40) - 20); // yVelocity
+					break label;
 				}
 			}
 		}
+		long endTime = System.nanoTime();
+		long microseconds = (endTime - startTime) / 1000;
+		long s = microseconds / 1000000;
+		long ms = microseconds % 1000000;
+
+		System.out.println("Preparation Time: " + s + " s, " + ms + "ms");
 	}
 
-	// Read the data from the Objects and return the requested value
-	public double getMass(int i) {
-		return mass[i];
-	}
-
+	// Getters and Setters
 	public double getRadius(int index) {
-		return radius[index];
+		return bodies[index].getRadius();
 	}
 
 	public double getXPosition(int index) {
-		return positionX[index];
+		return bodies[index].getXPosition();
 	}
 
 	public double getYPosition(int index) {
-		return positionY[index];
+		return bodies[index].getYPosition();
 	}
 
 	public double getXVelocity(int index) {
-		return velocityX[index];
+		return bodies[index].getXVelocity();
 	}
 
 	public double getYVelocity(int index) {
-		return velocityY[index];
+		return bodies[index].getYVelocity();
 	}
 
 	public int getCount() {
 		return count;
 	}
 
-	/*
-	 * Calculate the distance between two points Input: (x1, y1) for point 1,
-	 * (x2, y2) for point 2 Output: Apply the distance formula, plug in the
-	 * values and return the answer.
-	 */
+	public double getMass(int i) {
+		return bodies[i].getMass();
+	}
+
+	public int getSideBarsCollisions() {
+		return borderCollision;
+	}
+
+	public int getInterBodyCollision() {
+		return interBodyCollision;
+	}
+
+	// Calculate the distance between two points
 	public static double distance(double x1, double y1, double x2, double y2) {
 		return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
 	}
 
 	/*
-	 * Check if the positioning of the object at 'index' is valid or not Input:
-	 * index of the object with its (x, y) coordinates also the radius of the
-	 * object Check with all the other objects and the walls return true if the
-	 * object is free return false if the object is within any other object or
-	 * crossing the wall
+	 * This function is used only once; while creating the frame. Check if the
+	 * initial positioning of an object is valid or not.
 	 * 
-	 * Reads the data from all other object's position and radius.
+	 * A frame is said to be valid if no object is within any other object, and
+	 * also not crossing the universe bounds. The object need not be in the
+	 * initial frame limits if graphics is used.
+	 * 
+	 * Input: index of the object which will be used to check with the objects
+	 * of lower limit to decrease the computations (x, y): proposed coordinates
+	 * of the object radius: the radius of the object
+	 * 
+	 * Returns false if the positioning is invalid, true otherwise.
 	 */
-	public static boolean isValid(double x, double y, double r) {
-		if (x <= r || x + r >= WIDTH) {
+	public boolean isValid(int index, double x, double y, double radius) {
+		// if the object crosses the side bars, that is invalid
+		if (x <= radius || x + radius >= WIDTH) {
 			return false;
 		}
 
-		if (y <= r || y + r >= HEIGHT) {
+		// if the object crosses the vertical limits, that is invalid
+		if (y <= radius || y + radius >= HEIGHT) {
 			return false;
 		}
 
-		for (int i = 0; i < count; i++) {
-			if(!defined[i])
-				continue;
-			if (distance(x, y, positionX[i], positionY[i]) <= (r + radius[i]))
+		// if the object is within any other object, that is also invalid
+		for (int i = 0; i < index; i++) {
+			if (distance(x, y, bodies[i].getXPosition(), bodies[i].getYPosition()) <= (radius + bodies[i].getRadius()))
 				return false;
 		}
 		return true;
 	}
 
 	/*
-	 * Check if there is a potential collision in a set frame If there is,
-	 * update the velocities by applying the formula
+	 * This function checks for a potential collision between objects and the
+	 * edge bars While moving in the plane, it is possible for an object to
+	 * collide with the other. If that happens, update their velocities.
 	 * 
-	 * No input, but allocate a 2D array, write the velocities if there is a
-	 * collision, then add the resultant velocity and update for the new one.
+	 * For every object, check if it collides with the edges. If it does, switch
+	 * the direction then for every following object, check if they are
+	 * colliding, and if they do, use the Newton's formula to get the new
+	 * velocity and do the update on both the objects. We can do the updates for
+	 * two objects at a time
 	 * 
-	 * Running Time: O(n^2) Space Complexity: O(n)
+	 * Runtime: O(n^2) Space Complexity: O(n)
 	 */
 	public void checkCollision() {
-
-		// these three arrays are the updated velocities,
-		// and if there is an update or not
-		double velX[] = new double[count];
-		double velY[] = new double[count];
+		double vels[][] = new double[count][2];
 		boolean vchange[] = new boolean[count];
 
-		// if a is not colliding with b, then b is not colliding with b
-		// if a is colliding with b, then so is b.
-		// this collision can be paired up and calculated altogether
+		// Iterate over every object and check for collision
 		for (int i = 0; i < count; i++) {
+			// check for collision with sides
+			if (bodies[i].getXPosition() <= bodies[i].getRadius()
+					|| bodies[i].getXPosition() + bodies[i].getRadius() >= WIDTH) {
+				bodies[i].setVelocity(bodies[i].getXVelocity() * (-1), bodies[i].getYVelocity());
+				borderCollision++;
+			}
 
-			// check for collision vertical edge bars
-			if (positionX[i] <= radius[i] || positionX[i] + radius[i] >= WIDTH) {
-				velocityX[i] *= (-1);
+			// check for collision with horizontal bars
+			if (bodies[i].getYPosition() <= bodies[i].getRadius()
+					|| bodies[i].getYPosition() + bodies[i].getRadius() >= HEIGHT) {
+				bodies[i].setVelocity(bodies[i].getXVelocity(), bodies[i].getYVelocity() * (-1));
+				borderCollision++;
 			}
-			
-			// check for collision with horizontal edge bars
-			if (positionY[i] <= radius[i] || positionY[i] + radius[i] >= HEIGHT) {
-				velocityY[i] *= (-1);
-			}
-			
-			double v1_x = velocityX[i];
-			double v1_y = velocityY[i];
-			
+
+			// for the object at i-th position, check with every other object
+			// we won't check the collision for a lower indexed object because
+			// it has already been checked.
 			for (int j = i + 1; j < count; j++) {
-				// pair of two colliding, update their velocities
-				if (distance(positionX[i], positionY[i], positionX[j], positionY[j]) <= (radius[i] + radius[j])) {
+				if (distance(bodies[i].getXPosition(), bodies[i].getYPosition(), bodies[j].getXPosition(),
+						bodies[j].getYPosition()) <= (bodies[i].getRadius() + bodies[j].getRadius())) {
+					interBodyCollision++;
 					vchange[i] = true;
 					vchange[j] = true;
-					double m1 = mass[i];
-					double m2 = mass[j];
-					double mass_sum = m1 + m2;
-					double mass_dif = m1 - m2;
-					double v2_x = velocityX[j];
-					double v2_y = velocityY[j];
+					double mass_sum = bodies[i].getMass() + bodies[j].getMass();
+					double mass_dif = bodies[i].getMass() - bodies[j].getMass();
+					double v1_x = bodies[i].getXVelocity();
+					double v2_x = bodies[j].getXVelocity();
+					double v1_y = bodies[i].getYVelocity();
+					double v2_y = bodies[j].getYVelocity();
+					double m1 = bodies[i].getMass();
+					double m2 = bodies[j].getMass();
 					double v1_x_new = (v1_x * mass_dif + 2 * m2 * v2_x) / mass_sum;
 					double v1_y_new = (v1_y * mass_dif + 2 * m2 * v2_y) / mass_sum;
 					double v2_x_new = (v2_x * mass_dif * (-1) + 2 * m1 * v1_x) / mass_sum;
 					double v2_y_new = (v2_y * mass_dif * (-1) + 2 * m1 * v1_y) / mass_sum;
-					velX[i] += v1_x_new;
-					velY[i] += v1_y_new;
-					velX[j] += v2_x_new;
-					velY[j] += v2_y_new;
+					vels[i][0] += v1_x_new;
+					vels[i][1] += v1_y_new;
+					vels[j][0] += v2_x_new;
+					vels[j][1] += v2_y_new;
 				}
 			}
-			// add up all the velocities from the array and write it to the index in the data
-			if (vchange[i]) {
-				velocityX[i] = velX[i];
-				velocityY[i] = velY[i];
-			}
-		}
-	}
-	
-	/*
-	 * Calculate the net force acting on all the objects and
-	 * update their values on the array.
-	 * 
-	 * For each object, READ their mass and position, and use Newton's formula
-	 * to calculate the force in both directions.
-	 * 
-	 * This depends on data from other objects, so threads must be careful here.
-	 * Another O(n^2) runtime algorithm.
-	 */
-	public void updateForces() {
-		double forceOnX[] = new double[count];
-		double forceOnY[] = new double[count];
-		
-		for (int i = 0; i < count; i++) {
-			double m1 = mass[i];
-			double x1 = positionX[i];
-			double y1 = positionY[i];
-			for (int j = i + 1; j < count; j++) {
-				double m2 = mass[j];
-				double x2 = positionX[j];
-				double y2 = positionY[j];
-				double R = distance(x1, y1, x2, y2);
-				double mode = (G * m1 * m2) / (R * R * R);
-				double fX = mode * (x2 - x1);
-				double fY = mode * (y2 - y1);
-				forceOnX[i] += fX;
-				forceOnY[i] += fY;
-				forceOnX[j] += -fX;
-				forceOnY[j] += -fY;
-			}
-			forceX[i] = forceOnX[i];
-			forceY[i] = forceOnY[i];
+			// if there is a collision, this thing gets true, and then we update
+			// the velocity.
+			if (vchange[i])
+				bodies[i].setVelocity(vels[i][0], vels[i][1]);
 		}
 	}
 
-	/*
-	 * Use Newton's second law to update the position of all the objects.
-	 * This also updates their velocities.
-	 * 
-	 * Runtime: O(n) -> This does not depend on any other object, 
-	 * so no coordination between threads
-	 */
+	// using position and mass, this function calculates
+	// the total forces acting on a body.
+	public void updateForces() {
+		double[][] forces = new double[count][2];
+		for (int i = 0; i < count; i++) {
+			double m1 = bodies[i].getMass();
+			double x1 = bodies[i].getXPosition();
+			double y1 = bodies[i].getYPosition();
+
+			for (int j = i + 1; j < count; j++) {
+				double m2 = bodies[j].getMass();
+				double x2 = bodies[j].getXPosition();
+				double y2 = bodies[j].getYPosition();
+				double R = distance(x1, y1, x2, y2);
+				double mode = (G * m1 * m2) / (R * R * R);
+				double forceX = mode * (x2 - x1);
+				double forceY = mode * (y2 - y1);
+
+				// update two at a time
+				// force of one on two is negative of that from two on one
+				forces[i][0] += forceX;
+				forces[i][1] += forceY;
+				forces[j][0] += -forceX;
+				forces[j][1] += -forceY;
+			}
+		}
+
+		for (int i = 0; i < count; i++) {
+			bodies[i].setForces(forces[i][0], forces[i][1]);
+		}
+	}
+
 	public void updatePosition() {
 
 		for (int i = 0; i < count; i++) {
-			double velX = velocityX[i];
-			double velY = velocityY[i];
-
+			double velocityX = bodies[i].getXVelocity();
+			double velocityY = bodies[i].getYVelocity();
 			double time = DELTA_T;
-			// x = u*t + 0.5*a*t*t
-			double x = velX * time + (0.5 * forceX[i] * time * time) / mass[i];
-			double y = velY * time + (0.5 * forceY[i] * time * time) / mass[i];
-			positionX[i] += x;
-			positionY[i] += y;
+			double x = velocityX * time + 0.5 * bodies[i].getXForce() * time * time / bodies[i].getMass();
+			double y = velocityY * time + 0.5 * bodies[i].getYForce() * time * time / bodies[i].getMass();
+			bodies[i].setPosition(bodies[i].getXPosition() + x, bodies[i].getYPosition() + y);
 			// v = u + at
-			x = velX + (forceX[i] * time) / mass[i];
-			y = velY + (forceY[i] * time) / mass[i];
-
-			velocityX[i] = x;
-			velocityY[i] = y;
+			x = velocityX + bodies[i].getXForce() * time / bodies[i].getMass();
+			y = velocityY + bodies[i].getYForce() * time / bodies[i].getMass();
+			bodies[i].setVelocity(x, y);
 		}
 	}
 
-	/*
-	 * This function first sees if there is a collision or not, if there is,
-	 * then it updates its velocity
-	 * 
-	 * After colliding, update the net forces acting on each object due to every other
-	 * 
-	 * Then, update the position and the velocity of every object
-	 * 
-	 * Total Runtime: O(n^2 + n^2 + n) = O(n^2)
-	 */
 	public void updateDynamics() {
 		checkCollision();
 		updateForces();
 		updatePosition();
 	}
 
-	/*
-	 * This updates the value of Delta T,
-	 * The change in time between two observations.
-	 * 
-	 * The values will be more accurate when this change is small,
-	 * else we will have to dive into integral calculus.
-	 * 
-	 * This function is called by the controller which changes the DELTA_T value
-	 * 
-	 * Careful here, wait until we are not updating the dynamics, because that is time dependent.
-	 * When this function is called, wait for all processes to finish, then block all writer functions
-	 * that need time for calculation, then update this value, then release all other threads
-	 * to continue with their calculation.
-	 */
 	public void updateSpeed(double factor) {
-		this.DELTA_T *= factor;
+		DELTA_T *= factor;
 	}
 
-	// You really need documentation for this?
 	public String toString() {
 		StringBuilder s = new StringBuilder();
-		int index = 0;
-		for (int i = 0; i < count; i++) {
-			s.append("" + (index + 1) + '\n');
-			s.append("Radius: " + radius[index] + "\n");
-			s.append("Mass: " + mass[index] + "\n");
-			s.append("Position: (" + positionX[index] + ", " + positionY[index] + ")\n");
-			s.append("Velocity: (" + velocityX[index] + ", " + velocityY[index] + ")\n");
-			s.append("Force: (" + forceX[index] + ", " + forceY[index] + ")\n");
-			index++;
+		int num = 1;
+		for (CelestialBody body : bodies) {
+			s.append("" + num + '\n');
+			s.append(body.toString());
 			s.append('\n');
+			num++;
 		}
 		return s.toString();
+	}
+
+	static class Coordinator extends Thread {
+
+		int threadNumber;
+		public Coordinator(int threadId, Semaphore[][] sem) {
+			threadNumber = threadId;
+		}
+
+		public void run() {
+
+		}
+		
+		public void updateDynamicsThreaded(int left, int right) {
+			checkCollision(left, right);
+			updateForces(left, right);
+			updatePosition(left, right);
+		}
+
+		public void checkCollision(int left, int right) {
+			// Iterate over every object and check for collision
+			for (int i = left; i <= right; i++) {
+				double finalVelX = 0, finalVelY = 0;
+				boolean finalVChange = false;
+				// check for collision with sides
+				if (bodies[i].getXPosition() <= bodies[i].getRadius()
+						|| bodies[i].getXPosition() + bodies[i].getRadius() >= WIDTH) {
+					bodies[i].setVelocity(bodies[i].getXVelocity() * (-1), bodies[i].getYVelocity());
+					borderCollision++;
+				}
+
+				// check for collision with horizontal bars
+				if (bodies[i].getYPosition() <= bodies[i].getRadius()
+						|| bodies[i].getYPosition() + bodies[i].getRadius() >= HEIGHT) {
+					bodies[i].setVelocity(bodies[i].getXVelocity(), bodies[i].getYVelocity() * (-1));
+					borderCollision++;
+				}
+
+				// for the object at i-th position, check with every other object
+				// we won't check the collision for a lower indexed object because
+				// it has already been checked.
+				label: for (int j = 0; j < count; j++) {
+					if (i == j)
+						continue label;
+					if (distance(bodies[i].getXPosition(), bodies[i].getYPosition(), bodies[j].getXPosition(),
+							bodies[j].getYPosition()) <= (bodies[i].getRadius() + bodies[j].getRadius())) {
+						if(i < j)
+							interBodyCollision++;
+						finalVChange = true;
+						double mass_sum = bodies[i].getMass() + bodies[j].getMass();
+						double mass_dif = bodies[i].getMass() - bodies[j].getMass();
+						double v1_x = bodies[i].getXVelocity();
+						double v2_x = bodies[j].getXVelocity();
+						double v1_y = bodies[i].getYVelocity();
+						double v2_y = bodies[j].getYVelocity();
+						double m2 = bodies[j].getMass();
+						double v1_x_new = (v1_x * mass_dif + 2 * m2 * v2_x) / mass_sum;
+						double v1_y_new = (v1_y * mass_dif + 2 * m2 * v2_y) / mass_sum;
+						finalVelX += v1_x_new;
+						finalVelY += v1_y_new;
+					}
+				}
+				// if there is a collision, this thing gets true, and then we update
+				// the velocity.
+				if (finalVChange)
+					bodies[i].setVelocity(finalVelX, finalVelY);
+			}
+		}
+
+		// using position and mass, this function calculates
+		// the total forces acting on a body.
+		public void updateForces(int left, int right) {
+			// double[][] forces = new double[count][2];
+
+			for (int i = left; i <= right; i++) {
+				double m1 = bodies[i].getMass();
+				double x1 = bodies[i].getXPosition();
+				double y1 = bodies[i].getYPosition();
+				double finalForceX = 0, finalForceY = 0;
+
+				label: for (int j = 0; j < count; j++) {
+					if (i == j)
+						continue label;
+					double m2 = bodies[j].getMass();
+					double x2 = bodies[j].getXPosition();
+					double y2 = bodies[j].getYPosition();
+					double R = distance(x1, y1, x2, y2);
+					double mode = (G * m1 * m2) / (R * R * R);
+					double forceX = mode * (x2 - x1);
+					double forceY = mode * (y2 - y1);
+
+					// update two at a time
+					// force of one on two is negative of that from two on one
+					finalForceX += forceX;
+					finalForceY += forceY;
+				}
+				bodies[i].setForces(finalForceX, finalForceY);
+			}
+		}
+
+		public void updatePosition(int left, int right) {
+			for (int i = left; i <= right; i++) {
+				double velocityX = bodies[i].getXVelocity();
+				double velocityY = bodies[i].getYVelocity();
+				double time = DELTA_T;
+				double x = velocityX * time + 0.5 * bodies[i].getXForce() * time * time / bodies[i].getMass();
+				double y = velocityY * time + 0.5 * bodies[i].getYForce() * time * time / bodies[i].getMass();
+				bodies[i].setPosition(bodies[i].getXPosition() + x, bodies[i].getYPosition() + y);
+				// v = u + at
+				x = velocityX + bodies[i].getXForce() * time / bodies[i].getMass();
+				y = velocityY + bodies[i].getYForce() * time / bodies[i].getMass();
+				bodies[i].setVelocity(x, y);
+			}
+		}
 	}
 }
