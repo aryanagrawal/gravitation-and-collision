@@ -10,7 +10,7 @@ public class GravityMT {
 	public Random generator;
 	public static int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
-	public static double DELTA_T = 1e-9;
+	public static double DELTA_T = 1e-5;
 
 	public static int interBodyCollision;
 	public static int borderCollision;
@@ -20,6 +20,7 @@ public class GravityMT {
 	public static Coordinator[] workers;
 	public static Semaphore[][] semaphores;
 	public static Semaphore permit[];
+	public static Semaphore localPermit[];
 
 	public GravityMT(int c, int width, int height, int threads) {
 		WIDTH = width;
@@ -58,8 +59,10 @@ public class GravityMT {
 			}
 		}
 		permit = new Semaphore[numWorkers];
+		localPermit = new Semaphore[numWorkers];
 		for (int i = 0; i < numWorkers; i++) {
 			permit[i] = new Semaphore(0);
+			localPermit[i] = new Semaphore(0);
 		}
 
 		// create the workers that will work on the data updates
@@ -116,7 +119,7 @@ public class GravityMT {
 	 * released will wake the main process up.
 	 */
 
-	public void releaseAllThreads() {
+	public void releaseThreads() {
 		for (int i = 0; i < numWorkers; i++) {
 			permit[i].release();
 		}
@@ -126,21 +129,16 @@ public class GravityMT {
 
 	public void updateDynamics(int count) {
 		iterations = count;
-		releaseAllThreads();
-		// Coordinator[] workers = new Coordinator[numWorkers];
-		// for (int i = 0; i < numWorkers; i++) {
-		// workers[i] = new Coordinator(i);
-		// workers[i].start();
-		// }
-		//
-		// for (int i = 0; i < numWorkers; i++) {
-		// try {
-		// workers[i].join();
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
-		// }
-
+		releaseThreads();
+		
+		for(int i=0; i<numWorkers; i++){
+			try {
+				workers[i].join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void updateSpeed(double factor) {
@@ -157,33 +155,54 @@ public class GravityMT {
 		}
 
 		public void run() {
-			System.out.println("Created workers, they're waiting like stupid");
 			try {
 				permit[threadNumber].acquire();
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			for (int i = 0; i < iterations; i++) {
-				updateDynamicsThreaded(workDistribution[threadNumber][0], workDistribution[threadNumber][1]);
-				
-				
-				// 5 stage dissemination barrier because at max there will be 32 threads
-				// we need nlogn iterations for a dissemination barrier
-				int stage = 1;
-				int numStage = 0;
-				int N = numWorkers;
-				while (stage < N) {
-					semaphores[numStage][threadNumber].release();
-					try {
-						semaphores[numStage][(threadNumber + stage) % N].acquire();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+			if(iterations == -1){
+				while(true) {
+					updateDynamicsThreaded(workDistribution[threadNumber][0], workDistribution[threadNumber][1]);
+					
+					
+					// 5 stage dissemination barrier because at max there will be 32 threads
+					// we need nlogn iterations for a dissemination barrier
+					int stage = 1;
+					int numStage = 0;
+					int N = numWorkers;
+					while (stage < N) {
+						semaphores[numStage][threadNumber].release();
+						try {
+							semaphores[numStage][(threadNumber + stage) % N].acquire();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						stage = stage * 2;
+						numStage++;
 					}
-					stage = stage * 2;
-					numStage++;
 				}
-				
+			} else{
+				for (int i = 0; i < iterations; i++) {
+					updateDynamicsThreaded(workDistribution[threadNumber][0], workDistribution[threadNumber][1]);
+					
+					// 5 stage dissemination barrier because at max there will be 32 threads
+					// we need nlogn iterations for a dissemination barrier
+					int stage = 1;
+					int numStage = 0;
+					int N = numWorkers;
+					while (stage < N) {
+						semaphores[numStage][threadNumber].release();
+						try {
+							semaphores[numStage][(threadNumber + stage) % N].acquire();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						stage = stage * 2;
+						numStage++;
+					}
+				}
+//				localPermit[threadNumber].release();
 				
 			}
 		}
@@ -192,8 +211,6 @@ public class GravityMT {
 			checkCollision(left, right);
 			updateForces(left, right);
 			updatePosition(left, right);
-
-			//
 		}
 
 		/*

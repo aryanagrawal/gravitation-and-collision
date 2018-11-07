@@ -33,14 +33,14 @@ public class ControllerMT extends JFrame {
 	public static double magnification = 1;
 
 	// Dimensions of the actual plane.
-	public static int UNIVERSE_WIDTH = 720*64;
-	public static int UNIVERSE_HEIGHT = 480*64;
+	public static int UNIVERSE_WIDTH = 720*512;
+	public static int UNIVERSE_HEIGHT = 480*512;
 
 	// number of bodies on the plane
-	public static int CELESTIAL_OBJECT_COUNT = 128;
+	public static int CELESTIAL_OBJECT_COUNT = 1024;
 
 	public static int NUM_WORKERS = 8;
-	public static int TIMESTEPS = 4;
+	public static int TIMESTEPS = 1024*4;
 	public static boolean withgraphics = false;
 
 	public ControllerMT(boolean withgraphics) {
@@ -105,23 +105,20 @@ public class ControllerMT extends JFrame {
 			universeController.setVisible(true);
 			while (true) {
 				universeController.view.repaint();
-				universeController.universe.releaseAllThreads();
+				universeController.universe.updateDynamics(-1);
 			}
 		} else {
 			long startTime = System.nanoTime();
-//			for (int i = 0; i < TIMESTEPS; i++) {
-//				universeController.universe.releaseAllThreads();
 			universeController.universe.updateDynamics(TIMESTEPS);
-//			}
 			
 			long endTime = System.nanoTime();
 			long microseconds = (endTime - startTime) / 1000;
 			long s = microseconds / 1000000;
 			long ms = microseconds % 1000000;
-//			System.out.println("Time taken by "+NUM_WORKERS+" threads: " + s + " s, " + ms + "ms");
-//			System.out.println("Total Collisions:");
-//			System.out.println("\t Collision by Walls: " + universeController.universe.getSideBarsCollisions());
-//			System.out.println("\t Total interbody collisions: " + universeController.universe.getInterBodyCollision());
+			System.out.println("Time taken by "+NUM_WORKERS+" threads: " + s + " s, " + ms + "ms");
+			System.out.println("Total Collisions:");
+			System.out.println("\t Collision by Walls: " + universeController.universe.getSideBarsCollisions());
+			System.out.println("\t Total interbody collisions: " + universeController.universe.getInterBodyCollision());
 		}
 	}
 
@@ -190,7 +187,6 @@ public class ControllerMT extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
 			JButton pressed = (JButton) e.getSource();
 			if (pressed == up) {
 				view.updateFramePosition(0, (int) (-FRAME_HEIGHT));
@@ -226,17 +222,14 @@ public class ControllerMT extends JFrame {
 
 		@Override
 		public void keyTyped(KeyEvent e) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void keyPressed(KeyEvent e) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
 			char keyPressed = e.getKeyChar();
 			if (keyPressed == 'w')
 				view.updateFramePosition(0, (int) (-FRAME_HEIGHT));
