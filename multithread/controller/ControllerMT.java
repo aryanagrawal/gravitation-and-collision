@@ -33,13 +33,13 @@ public class ControllerMT extends JFrame {
 	public static double magnification = 1;
 
 	// Dimensions of the actual plane.
-	public static int UNIVERSE_WIDTH = 720*1024;
-	public static int UNIVERSE_HEIGHT = 480*1024;
+	public static int UNIVERSE_WIDTH = 720*128;
+	public static int UNIVERSE_HEIGHT = 480*128;
 
 	// number of bodies on the plane
-	public static int CELESTIAL_OBJECT_COUNT = 1024;
+	public static int CELESTIAL_OBJECT_COUNT = 64;
 
-	public static int NUM_WORKERS = 8;
+	public static int NUM_WORKERS = 2;
 	public static int TIMESTEPS = 5000;
 	public static boolean withgraphics = false;
 

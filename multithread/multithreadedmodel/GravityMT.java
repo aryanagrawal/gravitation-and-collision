@@ -154,20 +154,23 @@ public class GravityMT {
 		return true;
 	}
 
-	/*
-	 * This function checks for a potential collision between objects and the
-	 * edge bars While moving in the plane, it is possible for an object to
-	 * collide with the other. If that happens, update their velocities.
-	 * 
-	 * For every object, check if it collides with the edges. If it does, switch
-	 * the direction then for every following object, check if they are
-	 * colliding, and if they do, use the Newton's formula to get the new
-	 * velocity and do the update on both the objects. We can do the updates for
-	 * two objects at a time
-	 * 
-	 * Runtime: O(n^2) Space Complexity: O(n)
-	 */
 
+	/*
+	 * This function is called by the controller to update the dynamics,
+	 * it creates workers, the workers update the dynamics of their respective objects
+	 * and once they are done with their tasks, the main process kills them all.
+	 * 
+	 * This is highly inefficient, instead, the controller 
+	 * must notify all the workers to start working, and the controller must go to sleep
+	 * then when all the workers are done with their task, they notify the controller,
+	 * and all the workers go to sleep.
+	 * 
+	 * Thread creation is expensive, it must be done only once.
+	 * 
+	 * Another approach would be to create an array of semaphores,
+	 * this process when called will put them to sleep and wake them up.
+	 * the last process released will wake the main process up.
+	 */
 	public void updateDynamics() {
 		Coordinator[] workers = new Coordinator[numWorkers];
 		for(int i=0; i<numWorkers; i++){
@@ -179,55 +182,24 @@ public class GravityMT {
 			try {
 				workers[i].join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-//		Coordinator worker1 = new Coordinator(1);
-//		Coordinator worker2 = new Coordinator(2);
-//		worker1.start();
-//		worker2.start();
-//		try {
-//			worker1.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//		try {
-//			worker2.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	public void updateSpeed(double factor) {
 		DELTA_T *= factor;
 	}
 
-	public String toString() {
-		StringBuilder s = new StringBuilder();
-		int num = 1;
-		for (CelestialBody body : bodies) {
-			s.append("" + num + '\n');
-			s.append(body.toString());
-			s.append('\n');
-			num++;
-		}
-		return s.toString();
-	}
-
 	static class Coordinator extends Thread {
-
 		int threadNumber;
-
+		
 		public Coordinator(int threadId) {
 			threadNumber = threadId;
 		}
 
 		public void run() {
-			if (threadNumber == 1)
-				updateDynamicsThreaded(0, count / 2);
-			else
-				updateDynamicsThreaded(count / 2 + 1, count - 1);
+			updateDynamicsThreaded(workDistribution[threadNumber][0], workDistribution[threadNumber][1]);
 		}
 
 		public void updateDynamicsThreaded(int left, int right) {
@@ -235,6 +207,20 @@ public class GravityMT {
 			updateForces(left, right);
 			updatePosition(left, right);
 		}
+
+		/*
+		 * This function checks for a potential collision between objects and the
+		 * edge bars While moving in the plane, it is possible for an object to
+		 * collide with the other. If that happens, update their velocities.
+		 * 
+		 * For every object, check if it collides with the edges. If it does, switch
+		 * the direction then for every following object, check if they are
+		 * colliding, and if they do, use the Newton's formula to get the new
+		 * velocity and do the update on both the objects. We can do the updates for
+		 * two objects at a time
+		 * 
+		 * Runtime: O(n^2) Space Complexity: O(n)
+		 */
 
 		public void checkCollision(int left, int right) {
 			// Iterate over every object and check for collision
@@ -283,10 +269,7 @@ public class GravityMT {
 			}
 		}
 
-		// using position and mass, this function calculates
-		// the total forces acting on a body.
 		public void updateForces(int left, int right) {
-			// double[][] forces = new double[count][2];
 
 			for (int i = left; i <= right; i++) {
 				double m1 = bodies[i].getMass();
@@ -294,6 +277,8 @@ public class GravityMT {
 				double y1 = bodies[i].getYPosition();
 				double finalForceX = 0, finalForceY = 0;
 
+				// for net force, all the bodies must be considered
+				// unlike as with the collision where just update the velocities.
 				label: for (int j = 0; j < count; j++) {
 					if (i == j)
 						continue label;
@@ -328,5 +313,17 @@ public class GravityMT {
 				bodies[i].setVelocity(x, y);
 			}
 		}
+	}
+	
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		int num = 1;
+		for (CelestialBody body : bodies) {
+			s.append("" + num + '\n');
+			s.append(body.toString());
+			s.append('\n');
+			num++;
+		}
+		return s.toString();
 	}
 }
