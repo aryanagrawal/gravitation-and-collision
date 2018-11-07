@@ -27,21 +27,33 @@ public class ControllerMT extends JFrame{
 	public static final int FRAME_WIDTH = 720;
 	public static final int FRAME_HEIGHT = 480;
 	
-	public static final int UNIVERSE_WIDTH = 720;
-	public static final int UNIVERSE_HEIGHT = 480;
+	public static final long UNIVERSE_WIDTH = 720;
+	public static final long UNIVERSE_HEIGHT = 480;
 	
 	public static double magnification = 1;
 	
-	public static final int CELESTIAL_OBJECT_COUNT = 2;
+	public static final int CELESTIAL_OBJECT_COUNT = 1024*64;
+
 	
+//	
+//	public static final long UNIVERSE_WIDTH = 720*1;
+//	public static final long UNIVERSE_HEIGHT = 480*1;
+//	
+//	public static double magnification = 1;
+//	
+//	public static final int CELESTIAL_OBJECT_COUNT = 20;
+//	
 	private GravityMT universe;
 	private MyKeyboardListener myKeyboard;
 	private MyButtonListener myButtons;
 	
 	private GraphicViewMT view;
 	
+	
+	
 
 	public ControllerMT() {
+		long startTime = System.nanoTime();
 		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		universe = new GravityMT(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
 		view = new GraphicViewMT(universe, FRAME_WIDTH, FRAME_HEIGHT, magnification);
@@ -56,6 +68,14 @@ public class ControllerMT extends JFrame{
 		setLocation(50, 50);
 		setTitle(CELESTIAL_OBJECT_COUNT + " - Objects Collision");
 		add(view);
+		
+		long endTime = System.nanoTime();
+	    
+	    long microseconds = (endTime - startTime)/1000;
+	    long s = microseconds/1000000;
+	    long ms = microseconds%1000000;
+	    
+	    System.out.println("Preparation Time: " + s + " s, " + ms + "ms");
 	}
 	
 	
@@ -63,10 +83,20 @@ public class ControllerMT extends JFrame{
 	public static void main(String[] args) {
 		ControllerMT universeController = new ControllerMT();
 		universeController.setVisible(true);
-
+		
 		while(true) {
 		    universeController.view.repaint();
+		    long startTime = System.nanoTime();
 		    universeController.universe.updateDynamics();
+		    long endTime = System.nanoTime();
+		    
+		    long microseconds = (endTime - startTime)/1000;
+		    long s = microseconds/1000000;
+		    long ms = microseconds%1000000;
+		    
+//		    System.out.println("Update Time: " + s + "s, " + ms + "ms");
+		    
+//		    System.exit(1);
 		}
 	}
 	

@@ -2,57 +2,147 @@ package multithreadedmodel;
 
 import java.util.Random;
 
+
 public class GravityMT {
 
-	public int count;
-	Random generator;
-	public int WIDTH, HEIGHT;
+	public static int count;
+	public static Random generator;
+	public static long WIDTH;
+	public static long HEIGHT;
 	public static final double G = 6.67e-11;
 	public double DELTA_T = 1e-6;
 
-	public double mass[];
-	public double radius[];
-	public double positionX[], positionY[];
-	public double velocityX[], velocityY[];
-	public double forceX[], forceY[];
-
-	public GravityMT(int count, int width, int height) {
+	public static boolean defined[];
+	public static double mass[];
+	public static double radius[];
+	public static double positionX[], positionY[];
+	public static double velocityX[], velocityY[];
+	public static double forceX[], forceY[];
+	public static int creatorIndices[][];
+	
+	static CreateObjects objectsCreator[];
+	static int numThreads = 6;
+	
+	
+	public GravityMT(int num, long width, long height) {
 
 		WIDTH = width;
 		HEIGHT = height;
-		this.count = count;
+		count = num;
 
-		this.radius = new double[count];
-		this.mass = new double[count];
-		this.positionX = new double[count];
-		this.positionY = new double[count];
-		this.velocityX = new double[count];
-		this.velocityY = new double[count];
-		this.forceX = new double[count];
-		this.forceY = new double[count];
+		defined = new boolean[num];
+		radius = new double[num];
+		mass = new double[num];
+		positionX = new double[num];
+		positionY = new double[num];
+		velocityX = new double[num];
+		velocityY = new double[num];
+		forceX = new double[num];
+		forceY = new double[num];
 		generator = new Random();
 
-		for (int i = 0; i < count; i++) {
-			label: while (true) {
-				// create a random (x, y) position and a radius
-				// verify it, if valid, accept it and move on.
+		
+		creatorIndices = new int[count][2];
+		int evenDistribution = count / numThreads;
+		int extras = count % numThreads;
+		int first = 0;
+		int last = evenDistribution-1;
+		if(extras > 0){
+			last++;
+			extras--;
+		}
+		for(int i=0; i<numThreads; i++){
+			creatorIndices[i][0] = first;
+			creatorIndices[i][1] = last;
+			first = last + 1;
+			last = first + evenDistribution-1;
+			if(extras > 0){
+				last++;
+				extras--;
+			}
+		}
+		objectsCreator = new CreateObjects[numThreads];
+		// create N processes
+		for (int i = 0; i < numThreads; i++) {
+			objectsCreator[i] = new CreateObjects(i, count, numThreads);
+		}
 
-				double x = generator.nextInt(WIDTH);
-				double y = generator.nextInt(HEIGHT);
-				double radius = generator.nextInt(10) + 10;
+		// tell them to create the objects
+		for (int i = 0; i < numThreads; i++)
+			objectsCreator[i].start();
+		
+		// kill them when they're done doing that
+		for(int i=0; i < numThreads; i++){
+			try {
+				objectsCreator[i].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+//		System.out.println(toString());
+//		for (int i = 0; i < num; i++) {
+//			label: while (true) {
+//				// create a random (x, y) position and a radius
+//				// verify it, if valid, accept it and move on.
+//
+//				double x = generator.nextInt((int)WIDTH);
+//				double y = generator.nextInt((int)HEIGHT);
+//				double r = generator.nextInt(10000) + 2500;
+//
+//				if (isValid(x, y, r)) {
+//					double xVel = generator.nextInt(40) - 20;
+//					double yVel = generator.nextInt(40) - 20;
+//					double m = (generator.nextInt(90) + 10) * 1e+17;
+//
+//					GravityMT.mass[i] = m;
+//					radius[i] = r;
+//					positionX[i] = x;
+//					positionY[i] = y;
+//					velocityX[i] = xVel;
+//					velocityY[i] = yVel;
+//					break label;
+//				}
+//			}
+//		}
+		
+	}
+	
+	static class CreateObjects extends Thread{
+		int threadId;
+		
+		public CreateObjects(int threadId, int totalCount, int totalThreads) {
+			this.threadId = threadId;
+		}
+		
+		public void run(){
+			createObjects(creatorIndices[threadId][0], creatorIndices[threadId][1]);
+		}
+		
+		private void createObjects(int left, int right){
+			for (int i = left; i <= right; i++) {
+				label: while (true) {
+					// create a random (x, y) position and a radius
+					// verify it, if valid, accept it and move on.
 
-				if (isValid(i, x, y, radius)) {
-					double xVel = generator.nextInt(40) - 20;
-					double yVel = generator.nextInt(40) - 20;
-					double mass = (generator.nextInt(90) + 10) * 1e+17;
+					double x = generator.nextInt((int)WIDTH);
+					double y = generator.nextInt((int)HEIGHT);
+					double r = generator.nextInt(10000) + 2500;
 
-					this.mass[i] = mass;
-					this.radius[i] = radius;
-					this.positionX[i] = x;
-					this.positionY[i] = y;
-					this.velocityX[i] = xVel;
-					this.velocityY[i] = yVel;
-					break label;
+					if (isValid(x, y, r)) {
+						double xVel = generator.nextInt(40) - 20;
+						double yVel = generator.nextInt(40) - 20;
+						double m = (generator.nextInt(90) + 10) * 1e+17;
+
+						GravityMT.mass[i] = m;
+						radius[i] = r;
+						positionX[i] = x;
+						positionY[i] = y;
+						velocityX[i] = xVel;
+						velocityY[i] = yVel;
+						defined[i] = true;
+						break label;
+					}
 				}
 			}
 		}
@@ -92,7 +182,7 @@ public class GravityMT {
 	 * (x2, y2) for point 2 Output: Apply the distance formula, plug in the
 	 * values and return the answer.
 	 */
-	public double distance(double x1, double y1, double x2, double y2) {
+	public static double distance(double x1, double y1, double x2, double y2) {
 		return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
 	}
 
@@ -105,7 +195,7 @@ public class GravityMT {
 	 * 
 	 * Reads the data from all other object's position and radius.
 	 */
-	public boolean isValid(int index, double x, double y, double r) {
+	public static boolean isValid(double x, double y, double r) {
 		if (x <= r || x + r >= WIDTH) {
 			return false;
 		}
@@ -114,7 +204,9 @@ public class GravityMT {
 			return false;
 		}
 
-		for (int i = 0; i < index; i++) {
+		for (int i = 0; i < count; i++) {
+			if(!defined[i])
+				continue;
 			if (distance(x, y, positionX[i], positionY[i]) <= (r + radius[i]))
 				return false;
 		}
@@ -177,10 +269,7 @@ public class GravityMT {
 					velY[j] += v2_y_new;
 				}
 			}
-		}
-
-		// add up all the velocities from the array and write it to the index in the data
-		for (int i = 0; i < count; i++) {
+			// add up all the velocities from the array and write it to the index in the data
 			if (vchange[i]) {
 				velocityX[i] = velX[i];
 				velocityY[i] = velY[i];
@@ -287,17 +376,16 @@ public class GravityMT {
 	}
 
 	// You really need documentation for this?
-	
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		int index = 0;
 		for (int i = 0; i < count; i++) {
 			s.append("" + (index + 1) + '\n');
-			s.append("Radius: " + this.radius[index] + "\n");
-			s.append("Mass: " + this.mass[index] + "\n");
-			s.append("Position: (" + this.positionX[index] + ", " + this.positionY[index] + ")\n");
-			s.append("Velocity: (" + this.velocityX[index] + ", " + this.velocityY[index] + ")\n");
-			s.append("Force: (" + this.forceX[index] + ", " + this.forceY[index] + ")\n");
+			s.append("Radius: " + radius[index] + "\n");
+			s.append("Mass: " + mass[index] + "\n");
+			s.append("Position: (" + positionX[index] + ", " + positionY[index] + ")\n");
+			s.append("Velocity: (" + velocityX[index] + ", " + velocityY[index] + ")\n");
+			s.append("Force: (" + forceX[index] + ", " + forceY[index] + ")\n");
 			index++;
 			s.append('\n');
 		}
