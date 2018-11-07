@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -50,12 +51,12 @@ public class ControllerMT extends JFrame{
 	private GraphicViewMT view;
 	
 	
-	
 
 	public ControllerMT() {
 		long startTime = System.nanoTime();
 		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		universe = new GravityMT(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
+		
 		view = new GraphicViewMT(universe, FRAME_WIDTH, FRAME_HEIGHT, magnification);
 		
 		myKeyboard = new MyKeyboardListener();
@@ -80,6 +81,7 @@ public class ControllerMT extends JFrame{
 	
 	
 
+	
 	public static void main(String[] args) {
 		ControllerMT universeController = new ControllerMT();
 		universeController.setVisible(true);
