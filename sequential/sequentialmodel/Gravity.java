@@ -6,19 +6,21 @@ public class Gravity {
 
 	public CelestialBody[] bodies;
 	public static int count;
-	Random generator;
+	public Random generator;
 	public int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
 	public double DELTA_T = 1e-7;
 
-	public static int interBodyCollision = 0;
-	public static int borderCollision = 0;
+	public static int interBodyCollision;
+	public static int borderCollision;
 
 	public Gravity(int c, int width, int height) {
 		WIDTH = width;
 		HEIGHT = height;
 		count = c;
 		this.bodies = new CelestialBody[c];
+		interBodyCollision = 0;
+		borderCollision = 0;
 		generator = new Random();
 
 		long startTime = System.nanoTime();
@@ -78,6 +80,14 @@ public class Gravity {
 		return bodies[i].getMass();
 	}
 
+	public int getSideBarsCollisions() {
+		return borderCollision;
+	}
+
+	public int getInterBodyCollision() {
+		return interBodyCollision;
+	}
+
 	// Calculate the distance between two points
 	public double distance(double x1, double y1, double x2, double y2) {
 		return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
@@ -113,22 +123,21 @@ public class Gravity {
 			if (distance(x, y, bodies[i].getXPosition(), bodies[i].getYPosition()) <= (radius + bodies[i].getRadius()))
 				return false;
 		}
-
 		return true;
 	}
 
 	/*
-	 * This function checks for a potential collision between objects and the edge bars
-	 * While moving in the plane, it is possible for an object to collide with the other.
-	 * If that happens, update their velocities.
+	 * This function checks for a potential collision between objects and the
+	 * edge bars While moving in the plane, it is possible for an object to
+	 * collide with the other. If that happens, update their velocities.
 	 * 
-	 * For every object, check if it collides with the edges. If it does, switch the direction
-	 * then for every following object, check if they are colliding, and if they do,
-	 * use the Newton's formula to get the new velocity and do the update on both the objects.
-	 * We can do the updates for two objects at a time
+	 * For every object, check if it collides with the edges. If it does, switch
+	 * the direction then for every following object, check if they are
+	 * colliding, and if they do, use the Newton's formula to get the new
+	 * velocity and do the update on both the objects. We can do the updates for
+	 * two objects at a time
 	 * 
-	 * Runtime: O(n^2)
-	 * Space Complexity: O(n)
+	 * Runtime: O(n^2) Space Complexity: O(n)
 	 */
 	public void checkCollision() {
 		double vels[][] = new double[count][2];
@@ -151,7 +160,8 @@ public class Gravity {
 			}
 
 			// for the object at i-th position, check with every other object
-			// we won't check the collision for a lower indexed object because it has already been checked.
+			// we won't check the collision for a lower indexed object because
+			// it has already been checked.
 			for (int j = i + 1; j < count; j++) {
 				if (distance(bodies[i].getXPosition(), bodies[i].getYPosition(), bodies[j].getXPosition(),
 						bodies[j].getYPosition()) <= (bodies[i].getRadius() + bodies[j].getRadius())) {
@@ -176,8 +186,9 @@ public class Gravity {
 					vels[j][1] += v2_y_new;
 				}
 			}
-			// if there is a collision, this thing gets true, and then we update the velocity.
-			if(vchange[i])
+			// if there is a collision, this thing gets true, and then we update
+			// the velocity.
+			if (vchange[i])
 				bodies[i].setVelocity(vels[i][0], vels[i][1]);
 		}
 	}
@@ -195,10 +206,8 @@ public class Gravity {
 				double m2 = bodies[j].getMass();
 				double x2 = bodies[j].getXPosition();
 				double y2 = bodies[j].getYPosition();
-
 				double R = distance(x1, y1, x2, y2);
 				double mode = (G * m1 * m2) / (R * R * R);
-
 				double forceX = mode * (x2 - x1);
 				double forceY = mode * (y2 - y1);
 
@@ -221,7 +230,6 @@ public class Gravity {
 		for (int i = 0; i < count; i++) {
 			double velocityX = bodies[i].getXVelocity();
 			double velocityY = bodies[i].getYVelocity();
-
 			double time = DELTA_T;
 			double x = velocityX * time + 0.5 * bodies[i].getXForce() * time * time / bodies[i].getMass();
 			double y = velocityY * time + 0.5 * bodies[i].getYForce() * time * time / bodies[i].getMass();
@@ -229,7 +237,6 @@ public class Gravity {
 			// v = u + at
 			x = velocityX + bodies[i].getXForce() * time / bodies[i].getMass();
 			y = velocityY + bodies[i].getYForce() * time / bodies[i].getMass();
-
 			bodies[i].setVelocity(x, y);
 		}
 	}

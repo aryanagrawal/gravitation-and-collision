@@ -28,13 +28,11 @@ public class GraphicView extends JPanel implements Observer {
 
 	private double magnification = 1;
 	
-	
 	public GraphicView(Gravity universe, int width, int height, double magnification) {
 		this.universe = universe;
 		this.FRAME_WIDTH = width;
 		this.FRAME_HEIGHT = height;
 		this.magnification = magnification;
-
 		repaint();
 	}
 	
@@ -57,9 +55,6 @@ public class GraphicView extends JPanel implements Observer {
 		this.frameYIndex += y;
 	}
 	
-	// you really need comments to get this?
-	// seriously you're reading this?
-	// wow
 	public void changeMagnification(double newMag){
 		magnification = newMag;
 		frameXIndex = 0;
@@ -101,7 +96,6 @@ public class GraphicView extends JPanel implements Observer {
 		return true;
 	}
 
-
 	@Override
 	public void paintComponent(Graphics g) {
 		g2 = (Graphics2D) g;
@@ -110,6 +104,5 @@ public class GraphicView extends JPanel implements Observer {
 				drawCenteredCircle((int)universe.getXPosition(i), (int)universe.getYPosition(i), 
 									(int)universe.getRadius(i));
 		}
-		
 	}
 }
