@@ -11,10 +11,6 @@ import javax.swing.JFrame;
 import sequentialmodel.Gravity;
 import view.GraphicView;
 
-/*
- * There should be enough space for every object, 
- * select your scale based off the user input.
- */
 public class Controller extends JFrame {
 
 	/**
@@ -77,7 +73,6 @@ public class Controller extends JFrame {
 		 * 
 		 */
 		
-		
 		int numargs = args.length;
 		int size = 32;
 		int sizes[] = new int[size];
@@ -125,6 +120,7 @@ public class Controller extends JFrame {
 //			while(true){
 				universeController.universe.updateDynamics();
 			}
+			
 			long endTime = System.nanoTime();
 			long microseconds = (endTime - startTime) / 1000;
 			long s = microseconds / 1000000;
