@@ -1,7 +1,6 @@
 package multithreadedmodel;
 
 import java.util.Random;
-import java.util.concurrent.Semaphore;
 
 public class GravityMT {
 
@@ -10,18 +9,46 @@ public class GravityMT {
 	public Random generator;
 	public static int WIDTH, HEIGHT;
 	public static final double G = 6.67e-11;
-	public static double DELTA_T = 1e-7;
+	public static double DELTA_T = 1e-5;
 
 	public static int interBodyCollision;
 	public static int borderCollision;
+	
+	public static int numWorkers;
+	public static int[][] workDistribution;
 
-	public GravityMT(int c, int width, int height) {
+	public GravityMT(int c, int width, int height, int threads) {
 		WIDTH = width;
 		HEIGHT = height;
 		count = c;
 		bodies = new CelestialBody[c];
 		interBodyCollision = 0;
 		borderCollision = 0;
+		numWorkers = threads;
+		
+		workDistribution = new int[numWorkers][2];
+		int index;
+		int end;
+		int start = 1;
+		int bs = count / numWorkers;
+		int rem = count % numWorkers;
+		workDistribution = new int[32][2];
+		for (index = 0; index < numWorkers; index++) {
+			if (rem == 0)
+				end = start + bs - 1;
+			else {
+				end = (start + bs);
+				rem--;
+			}
+			workDistribution[index][0] = start-1;
+			workDistribution[index][1] = end-1;
+			start = end + 1;
+		}
+//		for(int i=0; i<numWorkers; i++){
+//			System.out.print("("+workDistribution[i][0] + ", " + workDistribution[i][1] + ")  ");
+//		}
+//		System.out.println();
+		
 		generator = new Random();
 
 		long startTime = System.nanoTime();
@@ -142,21 +169,34 @@ public class GravityMT {
 	 */
 
 	public void updateDynamics() {
-		Coordinator worker1 = new Coordinator(1);
-		Coordinator worker2 = new Coordinator(2);
-		worker1.start();
-		worker2.start();
-		try {
-			worker1.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		Coordinator[] workers = new Coordinator[numWorkers];
+		for(int i=0; i<numWorkers; i++){
+			workers[i] = new Coordinator(i);
+			workers[i].start();
 		}
-		try {
-			worker2.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		
+		for(int i=0; i<numWorkers; i++){
+			try {
+				workers[i].join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
+//		Coordinator worker1 = new Coordinator(1);
+//		Coordinator worker2 = new Coordinator(2);
+//		worker1.start();
+//		worker2.start();
+//		try {
+//			worker1.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		try {
+//			worker2.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	public void updateSpeed(double factor) {

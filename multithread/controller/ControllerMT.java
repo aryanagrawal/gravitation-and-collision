@@ -33,27 +33,18 @@ public class ControllerMT extends JFrame {
 	public static double magnification = 1;
 
 	// Dimensions of the actual plane.
-	public static int UNIVERSE_WIDTH = 720;
-	public static int UNIVERSE_HEIGHT = 480;
+	public static int UNIVERSE_WIDTH = 720*1024;
+	public static int UNIVERSE_HEIGHT = 480*1024;
 
 	// number of bodies on the plane
-	public static int CELESTIAL_OBJECT_COUNT = 10;
+	public static int CELESTIAL_OBJECT_COUNT = 1024;
 
-	//
-	// public static final long UNIVERSE_WIDTH = 720*1;
-	// public static final long UNIVERSE_HEIGHT = 480*1;
-	//
-	// public static double magnification = 1;
-	//
-	// public static final int CELESTIAL_OBJECT_COUNT = 20;
-	//
-
-	public static int NUM_WORKERS = 1;
-	public static int TIMESTEPS = 500;
+	public static int NUM_WORKERS = 8;
+	public static int TIMESTEPS = 5000;
 	public static boolean withgraphics = false;
 
 	public ControllerMT(boolean withgraphics) {
-		universe = new GravityMT(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
+		universe = new GravityMT(CELESTIAL_OBJECT_COUNT, UNIVERSE_WIDTH, UNIVERSE_HEIGHT, NUM_WORKERS);
 
 		if (withgraphics) {
 			// setup the graphics panel and controller (navigator)
@@ -127,7 +118,7 @@ public class ControllerMT extends JFrame {
 			long microseconds = (endTime - startTime) / 1000;
 			long s = microseconds / 1000000;
 			long ms = microseconds % 1000000;
-			System.out.println("Time taken by one thread: " + s + " s, " + ms + "ms");
+			System.out.println("Time taken by "+NUM_WORKERS+" threads: " + s + " s, " + ms + "ms");
 			System.out.println("Total Collisions:");
 			System.out.println("\t Collision by Walls: " + universeController.universe.getSideBarsCollisions());
 			System.out.println("\t Total interbody collisions: " + universeController.universe.getInterBodyCollision());
