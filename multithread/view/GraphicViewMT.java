@@ -1,5 +1,6 @@
 package view;
 
+/*
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
@@ -12,9 +13,6 @@ import multithreadedmodel.GravityMT;
 
 public class GraphicViewMT extends JPanel implements Observer {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	GravityMT universe;
 	private Graphics2D g2;
@@ -70,18 +68,7 @@ public class GraphicViewMT extends JPanel implements Observer {
 		universe.updateSpeed(factor);
 	}
 	
-	/*
-	 * draw a circle of given radius and center on the frame
-	 * 
-	 * Input: 	Center of the Circle (x, y) in reference to the ultimate width and height
-	 * 			Radius of the Circle r
-	 * 
-	 * fillOval needs a corner coordinate and two diameters.
-	 * use the center of the circle, subtract the frameIndex to bring it to the frame,
-	 * then subtract the radius of the circle to get to the exact location. do the same for y
-	 * multiply the radius by 2 to make it the diameter, being the radius, d = 2*r
-	 * 
-	 */
+	
 	public void drawCenteredCircle(int x, int y, int r) {
 		g2.fillOval((int)(((double)(x-r))/((double)magnification)) - frameXIndex, 
 					(int)(((double)(y-r))/((double)magnification)) - frameYIndex, 
@@ -113,3 +100,5 @@ public class GraphicViewMT extends JPanel implements Observer {
 		
 	}
 }
+
+*/

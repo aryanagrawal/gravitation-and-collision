@@ -135,7 +135,6 @@ public class GravityMT {
 			try {
 				workers[i].join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -202,8 +201,6 @@ public class GravityMT {
 						numStage++;
 					}
 				}
-//				localPermit[threadNumber].release();
-				
 			}
 		}
 
